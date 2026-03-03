@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#1d4ed8"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>Biathlon EPS</title>
+<link rel="manifest" href="manifest.json"/>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png"/>
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --navy: #f5f0e8;
+    --blue: #1a1a2e;
+    --blue-mid: #2d2d4e;
+    --blue-light: #3d3d6e;
+    --accent: #d4793a;
+    --green: #3a7d44;
+    --red: #c0392b;
+    --surface: #ffffff;
+    --surface2: #f9f5ef;
+    --border: #e2d9cc;
+    --text: #1a1a2e;
+    --muted: #8a7f72;
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--navy); color: var(--text); font-family: var(--font-body); overflow-x: hidden; }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--blue);
+    border-bottom: 1px solid #0d0d1a;
+    padding: 0 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 58px; gap: 12px; flex-shrink: 0;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon { font-size: 24px; }
+  .logo-text { font-family: var(--font-head); font-size: 18px; color: #fff; letter-spacing: 1px; }
+  .logo-sub { font-size: 10px; color: rgba(255,255,255,0.5); letter-spacing: 1.5px; text-transform: uppercase; font-family: var(--font-mono); }
+  .header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    border: none; border-radius: 8px; padding: 7px 14px;
+    cursor: pointer; font-family: var(--font-body); font-size: 13px; font-weight: 600;
+    transition: all .15s; white-space: nowrap;
+  }
+  .btn:hover { filter: brightness(0.95); transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+  .btn:active { transform: translateY(0); }
+  .btn-primary { background: #fff; color: var(--blue); }
+  .btn-success { background: #e8f5ea; color: #2d6a35; border: 1px solid #b8ddbf; }
+  .btn-warning { background: var(--accent); color: #fff; }
+  .btn-ghost { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.85); border: 1px solid rgba(255,255,255,0.2); }
+  .btn-danger { background: #fdecea; color: #a93226; border: 1px solid #f5c6c2; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; border-radius: 6px; }
+  .btn-icon { padding: 6px 8px; font-size: 14px; background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .btn-icon:hover { background: var(--surface2); color: var(--text); }
+
+  label.btn { display: inline-block; }
+
+  /* ── TABS ── */
+  .tabs { display: flex; gap: 4px; }
+  .tab { background: transparent; border: none; color: rgba(255,255,255,0.55); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: var(--font-body); font-weight: 500; transition: all .15s; }
+  .tab.active { background: rgba(255,255,255,0.18); color: #fff; font-weight: 700; }
+  .tab:hover:not(.active) { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); }
+
+  /* ── MAIN LAYOUT ── */
+  main { display: flex; flex-direction: column; height: calc(100vh - 58px); overflow: hidden; }
+  .content { flex: 1; overflow: auto; padding: 16px 20px; }
+
+  /* ── TABLE ── */
+  .table-wrapper { overflow: auto; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); font-size: 13px; min-width: 1000px; }
+  thead tr { background: var(--surface2); }
+  th {
+    padding: 10px 8px; text-align: left;
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: 1.2px;
+    color: var(--muted); text-transform: uppercase; white-space: nowrap;
+    border-bottom: 2px solid var(--border);
+    position: sticky; top: 0; background: var(--surface2); z-index: 5;
+  }
+  th.sortable { cursor: pointer; }
+  th.sortable:hover { color: var(--text); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+  tbody tr:hover { background: #fdf9f4; }
+  tbody tr:last-child { border-bottom: none; }
+  td { padding: 6px 8px; vertical-align: middle; color: var(--text); }
+
+  /* ── EDITABLE CELLS ── */
+  .cell-edit {
+    background: transparent; border: none; color: var(--text);
+    font-family: var(--font-body); font-size: 13px;
+    width: 100%; min-width: 0; outline: none; padding: 4px 6px;
+    border-radius: 6px; transition: background .15s;
+  }
+  .cell-edit:hover { background: #f0ebe3; cursor: pointer; }
+  .cell-edit:focus { background: #e8f0fe; box-shadow: 0 0 0 2px #9ab4f0; cursor: text; }
+  .cell-select { appearance: none; -webkit-appearance: none; }
+  select.cell-edit { cursor: pointer; padding-right: 4px; }
+  input[type=number].cell-edit { font-family: var(--font-mono); text-align: center; }
+
+  /* ── NOTE BADGES ── */
+  .badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 3px 10px; border-radius: 20px; font-weight: 800;
+    font-family: var(--font-mono); font-size: 13px; white-space: nowrap;
+  }
+  .badge-genre-f { background: #fce4ec; color: #880e4f; }
+  .badge-genre-g { background: #e3f2fd; color: #0d47a1; }
+  .note-bar { display: flex; align-items: center; gap: 6px; }
+  .note-val { font-family: var(--font-mono); font-weight: 800; font-size: 14px; min-width: 32px; text-align: right; }
+  .note-track { flex: 1; height: 6px; background: var(--border); border-radius: 3px; min-width: 40px; overflow: hidden; }
+  .note-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+
+  /* ── STATS BAR ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 18px; display: flex; flex-direction: column; gap: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .stat-val { font-family: var(--font-head); font-size: 28px; color: var(--blue); }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-family: var(--font-mono); }
+
+  /* ── EMPTY STATE ── */
+  .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 80px 20px; gap: 12px; color: var(--muted); text-align: center; }
+  .empty-icon { font-size: 56px; }
+  .empty-title { font-family: var(--font-head); font-size: 20px; color: var(--text); }
+  .empty-hint { font-size: 12px; max-width: 460px; line-height: 1.7; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; color: var(--muted); }
+  .empty-hint code { font-family: var(--font-mono); color: var(--accent); font-size: 11px; }
+
+  /* ── TOOLTIP BARÈME ── */
+  .bareme-panel {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .bareme-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .bareme-section h4 { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 8px; }
+  .bareme-row { display: flex; justify-content: space-between; padding: 4px 8px; border-radius: 5px; font-size: 12px; color: var(--text); }
+  .bareme-row:nth-child(even) { background: var(--surface2); }
+  .pts-pill { font-family: var(--font-mono); font-weight: 700; color: var(--blue); background: #e8eaf6; padding: 1px 8px; border-radius: 10px; font-size: 11px; }
+
+  /* ── TOAST ── */
+  #toast { position: fixed; bottom: 20px; right: 20px; background: var(--green); color: #fff; border-radius: 10px; padding: 10px 18px; font-size: 13px; font-weight: 600; opacity: 0; transform: translateY(10px); transition: all .3s; z-index: 999; pointer-events: none; }
+  #toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ── DETAIL PANEL ── */
+  .detail-panel {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; margin-top: 8px; display: none;
+    font-size: 13px;
+  }
+  .detail-panel.open { display: block; }
+  .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+  .detail-item { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; }
+  .detail-item .di-label { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 4px; }
+  .detail-item .di-val { font-size: 18px; font-weight: 800; font-family: var(--font-mono); color: var(--text); }
+  .detail-item .di-max { font-size: 11px; color: var(--muted); }
+
+  /* ── RESULTS VIEW ── */
+  .podium { display: flex; align-items: flex-end; justify-content: center; gap: 12px; margin-bottom: 24px; }
+  .podium-item { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; text-align: center; transition: all .3s; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .podium-item.gold { border-color: #f59e0b; background: #fffbeb; flex: 1.2; }
+  .podium-item.silver { border-color: #94a3b8; background: #f8fafc; flex: 1; }
+  .podium-item.bronze { border-color: #cd7c3e; background: #fdf6f0; flex: 1; }
+  .podium-medal { font-size: 28px; }
+  .podium-name { font-family: var(--font-head); font-size: 14px; margin: 4px 0; color: var(--text); }
+  .podium-note { font-family: var(--font-mono); font-size: 22px; font-weight: 800; color: var(--text); }
+
+  @media (max-width: 600px) {
+    .header-actions .tabs { display: none; }
+    .logo-text { font-size: 15px; }
+  }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+  .animate-in { animation: fadeIn .25s ease both; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--navy); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-icon">🏹</span>
+    <div>
+      <div class="logo-text">BIATHLON EPS</div>
+      <div class="logo-sub">Tir à l'arc · Course de fond · 2nde</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="tabs">
+      <button class="tab active" onclick="setView('eleves')">Élèves</button>
+      <button class="tab" onclick="setView('resultats')">Résultats</button>
+      <button class="tab" onclick="setView('bareme')">Barème</button>
+    </div>
+    <label class="btn btn-primary btn-sm">📂 CSV <input type="file" accept=".csv,.CSV" id="csvInput" style="display:none"/></label>
+    <button class="btn btn-success btn-sm" onclick="addEleve()">+ Élève</button>
+    <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ Export</button>
+    <button class="btn btn-danger btn-sm" onclick="clearClasse()">🗑 Vider la classe</button>
+  </div>
+</header>
+
+<main>
+  <div class="content" id="viewEleves">
+    <div id="tableContainer"></div>
+  </div>
+  <div class="content" id="viewResultats" style="display:none"></div>
+  <div class="content" id="viewBareme" style="display:none">
+    <div class="bareme-panel animate-in">
+      <h3 style="font-family:var(--font-head);font-size:18px;margin-bottom:16px;color:#fff">📋 Barème complet</h3>
+      <div class="bareme-grid">
+        <div class="bareme-section">
+          <h4>⏱ Performance — 12 pts (temps final)</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-bottom:6px">
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--accent);text-align:center;padding:3px">FILLES</div>
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--accent);text-align:center;padding:3px">GARÇONS</div>
+          </div>
+          <div class="bareme-row"><span>≤ 7'00"</span><span class="pts-pill">12 pts</span><span>≤ 6'00"</span></div>
+          <div class="bareme-row"><span>≤ 7'30"</span><span class="pts-pill">11 pts</span><span>≤ 6'30"</span></div>
+          <div class="bareme-row"><span>≤ 8'00"</span><span class="pts-pill">10 pts</span><span>≤ 7'00"</span></div>
+          <div class="bareme-row"><span>≤ 9'00"</span><span class="pts-pill">9 pts</span><span>≤ 8'00"</span></div>
+          <div class="bareme-row"><span>≤ 10'00"</span><span class="pts-pill">8 pts</span><span>≤ 9'00"</span></div>
+          <div class="bareme-row"><span>≤ 11'00"</span><span class="pts-pill">7 pts</span><span>≤ 10'00"</span></div>
+          <div class="bareme-row"><span>≤ 12'00"</span><span class="pts-pill">6 pts</span><span>≤ 11'00"</span></div>
+          <div class="bareme-row"><span>≤ 13'00"</span><span class="pts-pill">5 pts</span><span>≤ 12'00"</span></div>
+          <div class="bareme-row"><span>≤ 14'00"</span><span class="pts-pill">4 pts</span><span>≤ 13'00"</span></div>
+          <div class="bareme-row"><span>≤ 15'00"</span><span class="pts-pill">3 pts</span><span>≤ 14'00"</span></div>
+          <div class="bareme-row"><span>≤ 16'00"</span><span class="pts-pill">2 pts</span><span>≤ 15'00"</span></div>
+          <div class="bareme-row"><span>&gt; 16'00"</span><span class="pts-pill">1 pt</span><span>&gt; 15'00"</span></div>
+        </div>
+        <div class="bareme-section">
+          <h4>🎯 Régularité précision — 3 pts</h4>
+          <div class="bareme-row"><span>Écart &lt; 4 pts entre volées</span><span class="pts-pill">3 pts</span></div>
+          <div class="bareme-row"><span>Écart = 4 pts</span><span class="pts-pill">2 pts</span></div>
+          <div class="bareme-row"><span>Écart 5–7 pts</span><span class="pts-pill">1,5 pt</span></div>
+          <div class="bareme-row"><span>Écart 8–10 pts</span><span class="pts-pill">1 pt</span></div>
+          <div class="bareme-row"><span>Écart &gt; 10 pts</span><span class="pts-pill">0,5 pt</span></div>
+
+          <h4 style="margin-top:14px">🔮 Prévision — 2 pts</h4>
+          <div class="bareme-row"><span>Écart &lt; 5 s</span><span class="pts-pill">2 pts</span></div>
+          <div class="bareme-row"><span>Écart 5–14 s</span><span class="pts-pill">1,5 pt</span></div>
+          <div class="bareme-row"><span>Écart 15–29 s</span><span class="pts-pill">1 pt</span></div>
+          <div class="bareme-row"><span>Écart ≥ 30 s</span><span class="pts-pill">0,5 pt</span></div>
+
+          <h4 style="margin-top:14px">💪 Investissement — 3 pts</h4>
+          <div class="bareme-row"><span>Degré 4 — Sérieux & qualitatif</span><span class="pts-pill">3 pts</span></div>
+          <div class="bareme-row"><span>Degré 3 — Total mais peu qualitatif</span><span class="pts-pill">2 pts</span></div>
+          <div class="bareme-row"><span>Degré 2 — Limité</span><span class="pts-pill">1 pt</span></div>
+          <div class="bareme-row"><span>Degré 1 — Aucun</span><span class="pts-pill">0,5 pt</span></div>
+
+          <h4 style="margin-top:14px">📍 Distances & objectifs tir</h4>
+          <div class="bareme-row"><span>6 m → objectif 120 pts (4×30)</span><span class="pts-pill">±5s/pt</span></div>
+          <div class="bareme-row"><span>7m50 → objectif 100 pts (4×25)</span><span class="pts-pill">±5s/pt</span></div>
+          <div class="bareme-row"><span>9 m → objectif 80 pts (4×20)</span><span class="pts-pill">±5s/pt</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+let eleves = JSON.parse(localStorage.getItem('biathlon_eleves') || '[]');
+let currentView = 'eleves';
+let expandedRow = null;
+
+function save() {
+  localStorage.setItem('biathlon_eleves', JSON.stringify(eleves));
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+function toast(msg, color='#16a34a') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.background = color;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ─── CALCULS ─────────────────────────────────────────────────────────────────
+function timeToSec(s) {
+  if (!s && s !== 0) return null;
+  if (typeof s === 'number') return s;
+  s = String(s).replace(/"/g,'').trim();
+  let m;
+  if ((m = s.match(/^(\d+)[':'](\d+)$/))) return +m[1]*60 + +m[2];
+  if ((m = s.match(/^(\d+)'(\d+)"?$/))) return +m[1]*60 + +m[2];
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+
+function secToStr(s) {
+  if (s == null || isNaN(s)) return '—';
+  const neg = s < 0; s = Math.abs(s);
+  return (neg?'-':'') + Math.floor(s/60) + "'" + String(s%60).padStart(2,'0') + '"';
+}
+
+function calcPerf(eleve) {
+  // Barème FILLES :
+  //  ≤ 7'00"  → 12 pts
+  //  ≤ 7'30"  → 11 pts
+  //  ≤ 8'00"  → 10 pts
+  //  ≤ 9'00"  →  9 pts
+  //  ≤ 10'00" →  8 pts
+  //  ≤ 11'00" →  7 pts
+  //  ≤ 12'00" →  6 pts
+  //  ≤ 13'00" →  5 pts
+  //  ≤ 14'00" →  4 pts
+  //  ≤ 15'00" →  3 pts
+  //  ≤ 16'00" →  2 pts
+  //   > 16'00" →  1 pt
+  //
+  // Barème GARÇONS (9 pts à 8'00", perd 1 pt par minute) :
+  //  ≤ 6'00"  → 12 pts  (bonus : 6 min sous le seuil 8' = +3 pts au-dessus de 9)
+  //  ≤ 6'30"  → 11 pts
+  //  ≤ 7'00"  → 10 pts
+  //  ≤ 8'00"  →  9 pts
+  //  ≤ 9'00"  →  8 pts
+  //  ≤ 10'00" →  7 pts
+  //  ≤ 11'00" →  6 pts
+  //  ≤ 12'00" →  5 pts
+  //  ≤ 13'00" →  4 pts
+  //  ≤ 14'00" →  3 pts
+  //  ≤ 15'00" →  2 pts
+  //   > 15'00" →  1 pt
+  // Seuils[pts] = temps max en secondes pour obtenir exactement `pts`
+  const seuilsF = {
+    12: 7*60,
+    11: 7*60+30,
+    10: 8*60,
+     9: 9*60,
+     8: 10*60,
+     7: 11*60,
+     6: 12*60,
+     5: 13*60,
+     4: 14*60,
+     3: 15*60,
+     2: 16*60,
+     1: Infinity
+  };
+  const seuilsG = {
+    12: 6*60,
+    11: 6*60+30,
+    10: 7*60,
+     9: 8*60,
+     8: 9*60,
+     7: 10*60,
+     6: 11*60,
+     5: 12*60,
+     4: 13*60,
+     3: 14*60,
+     2: 15*60,
+     1: Infinity
+  };
+  const s = eleve.genre === 'G' ? seuilsG : seuilsF;
+  const tf = eleve.tempsFinal;
+  if (tf == null || isNaN(tf)) return 0;
+  for (let pts = 12; pts >= 1; pts--) {
+    if (tf <= s[pts]) return pts;
+  }
+  return 1;
+}
+
+// Normalise volees : accepte ancien format [total,...] ou nouveau [[f1,f2,f3],...]
+function normaliseVolees(volees) {
+  return (volees || [[], [], [], []]).slice(0, 4).map(v => {
+    if (Array.isArray(v)) {
+      const arr = v.slice(0, 3);
+      while (arr.length < 3) arr.push('');
+      return arr;
+    }
+    return [String(v || ''), '', ''];
+  });
+}
+
+// Somme d'une volée (valeurs 0,6,7,8,9,10 par flèche)
+function totalVolee(fleches) {
+  return fleches.reduce((s, f) => {
+    const v = parseFloat(f);
+    return s + (isNaN(v) ? 0 : v);
+  }, 0);
+}
+
+function calcNote(eleve) {
+  const volees = normaliseVolees(eleve.volees);
+  const totauxVolees = volees.map(totalVolee);
+  const totalTir = totauxVolees.reduce((a,b) => a+b, 0);
+
+  const objectifs = {'6':120,'7.5':100,'9':80}; // 4 volées × (30/25/20 pts)
+  const obj = objectifs[String(eleve.distance)] ?? 100;
+  const pen = (totalTir - obj) * 5; // positif = bonus (soustrait du temps)
+  const tc = timeToSec(eleve.tempsCourse);
+  const tempsFinal = tc != null ? tc - pen : null;
+
+  eleve.tempsFinal = tempsFinal;
+
+  const ptsPerf = calcPerf(eleve);
+
+  // Régularité : écart entre la meilleure et la moins bonne volée
+  const sorted = [...totauxVolees].sort((a,b)=>a-b);
+  const ecart = sorted[3] - sorted[0];
+  let ptsReg = 0.5;
+  if (ecart < 4) ptsReg = 3;
+  else if (ecart === 4) ptsReg = 2;
+  else if (ecart <= 7) ptsReg = 1.5;
+  else if (ecart <= 10) ptsReg = 1;
+
+  // Prévision comparée au temps de course BRUT (sans pénalités/bonus)
+  const prevSec = timeToSec(eleve.prevision);
+  let ptsPrev = 0;
+  if (prevSec != null && tc != null) {
+    const d = Math.abs(prevSec - tc);
+    if (d < 5) ptsPrev = 2;
+    else if (d <= 14) ptsPrev = 1.5;
+    else if (d <= 29) ptsPrev = 1;
+    else ptsPrev = 0.5;
+  }
+
+  const ptsInvest = parseFloat(eleve.investissement) || 0;
+  const total = ptsPerf + ptsReg + ptsPrev + ptsInvest;
+  return { ptsPerf, ptsReg, ptsPrev, ptsInvest, total, pen, totalTir, totauxVolees, ecartVolees: ecart, tempsBrut: tc };
+}
+
+// ─── ADD / DELETE ─────────────────────────────────────────────────────────────
+function addEleve() {
+  const e = {
+    id: uid(), nom:'Nouveau', prenom:'Élève', genre:'F',
+    distance:'7.5', tempsCourse:'', prevision:'',
+    volees:[['','',''],['','',''],['','',''],['','','']], investissement: 2, tempsFinal: null
+  };
+  eleves.unshift(e);
+  save();
+  renderTable();
+  toast('Élève ajouté — cliquez sur une cellule pour modifier');
+}
+
+function deleteEleve(id) {
+  if (!confirm('Supprimer cet élève ?')) return;
+  eleves = eleves.filter(e => e.id !== id);
+  expandedRow = null;
+  save();
+  renderTable();
+  toast('Élève supprimé', '#dc2626');
+}
+
+// ─── CSV ──────────────────────────────────────────────────────────────────────
+document.getElementById('csvInput').addEventListener('change', function(ev) {
+  const file = ev.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const text = e.target.result;
+      const lines = text.trim().split(/\r?\n/);
+      const sep = lines[0].includes(';') ? ';' : ',';
+      const headers = lines[0].split(sep).map(h => h.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''));
+      const get = (row, ...keys) => {
+        for (const k of keys) {
+          const i = headers.indexOf(k);
+          if (i >= 0 && row[i]) return row[i].trim();
+        }
+        return '';
+      };
+      const imported = lines.slice(1).filter(l => l.trim()).map(line => {
+        const vals = line.split(sep);
+        const g = get(vals,'genre','sexe').toUpperCase();
+        return {
+          id: uid(),
+          nom: get(vals,'nom','name','eleve'),
+          prenom: get(vals,'prenom','firstname','prénom'),
+          genre: g === 'G' ? 'G' : 'F',
+          distance: get(vals,'distance') || '7.5',
+          tempsCourse: get(vals,'temps','tempscourse','temps course','time'),
+          prevision: get(vals,'prevision','prévision','prev'),
+          volees: (() => {
+            // Essaie de lire f1a;f1b;f1c pour chaque volée, sinon total
+            const parseVol = (total, a, b, c) => {
+              const va = get(vals,a), vb = get(vals,b), vc = get(vals,c);
+              if (va || vb || vc) return [va,vb,vc];
+              const t = get(vals,total);
+              return t ? [t,'',''] : ['','',''];
+            };
+            return [
+              parseVol('v1','v1a','v1b','v1c'),
+              parseVol('v2','v2a','v2b','v2c'),
+              parseVol('v3','v3a','v3b','v3c'),
+              parseVol('v4','v4a','v4b','v4c'),
+            ];
+          })(),
+          investissement: parseFloat(get(vals,'investissement')) || 2,
+          tempsFinal: null
+        };
+      });
+      eleves = imported;
+      save(); renderTable();
+      toast(`${imported.length} élève(s) importé(s) ✓`);
+    } catch(err) { toast('Erreur CSV : ' + err.message, '#dc2626'); }
+    ev.target.value = '';
+  };
+  reader.readAsText(file, 'utf-8');
+});
+
+// ─── EXPORT CSV ───────────────────────────────────────────────────────────────
+function clearClasse() {
+  if (eleves.length === 0) { toast('Aucun élève à supprimer', '#64748b'); return; }
+  if (!confirm(`Supprimer les ${eleves.length} élève(s) de la classe ? Cette action est irréversible.`)) return;
+  eleves = [];
+  expandedRow = null;
+  save();
+  renderTable();
+  toast('Classe vidée', '#dc2626');
+}
+
+function exportCSV() {
+  const rows = [['Nom','Prenom','Genre','Distance','Temps','V1','V2','V3','V4','Prevision','Investissement','Note']];
+  eleves.forEach(e => {
+    const c = calcNote(e);
+    rows.push([e.nom, e.prenom, e.genre, e.distance, e.tempsCourse,
+      ...(e.volees||['',' ',' ',' ']).slice(0,4),
+      e.prevision, e.investissement, c.total]);
+  });
+  const csv = rows.map(r => r.join(';')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+  a.download = 'biathlon_evaluation.csv'; a.click();
+}
+
+// ─── INLINE EDIT ─────────────────────────────────────────────────────────────
+function updateField(id, field, value, subIdx, fleIdx) {
+  const e = eleves.find(x => x.id === id);
+  if (!e) return;
+  if (field === 'fleche') {
+    // s'assurer que la volée est un tableau
+    if (!Array.isArray(e.volees[subIdx])) e.volees[subIdx] = ['','',''];
+    e.volees[subIdx][fleIdx] = value;
+  } else {
+    e[field] = value;
+  }
+  save();
+  // Recalc & update note + totaux volées sans re-render complet
+  const c = calcNote(e);
+  const noteEl = document.getElementById('note-' + id);
+  if (noteEl) noteEl.innerHTML = renderNoteCell(c.total);
+  // Mettre à jour les totaux par volée
+  c.totauxVolees.forEach((tot, vi) => {
+    const span = document.getElementById('vtot-' + id + '-' + vi);
+    if (span) span.textContent = tot;
+  });
+  const detailEl = document.getElementById('detail-' + id);
+  if (detailEl && detailEl.classList.contains('open')) {
+    detailEl.innerHTML = renderDetail(e, c);
+  }
+}
+
+function renderNoteCell(total) {
+  const pct = Math.min(100, (total/20)*100);
+  const col = total >= 16 ? '#16a34a' : total >= 14 ? '#22c55e' : total >= 12 ? '#ca8a04' : total >= 10 ? '#d97706' : total >= 8 ? '#ea580c' : '#dc2626';
+  return `<div class="note-bar">
+    <span class="note-val" style="color:${col}">${isNaN(total)?'—':total}</span>
+    <div class="note-track"><div class="note-fill" style="width:${pct}%;background:${col}"></div></div>
+  </div>`;
+}
+
+function renderDetail(e, c) {
+  const tf = e.tempsFinal;
+  return `<div class="detail-grid">
+    <div class="detail-item">
+      <div class="di-label">Tps final (après pénal.)</div>
+      <div class="di-val" style="color:var(--blue-light)">${secToStr(tf)}</div>
+      <div class="di-max">Pénalité/bonus: ${c.pen >= 0 ? '+'+c.pen : c.pen}s | Total tir: ${c.totalTir} pts</div>
+    </div>
+    <div class="detail-item">
+      <div class="di-label">Performance</div>
+      <div class="di-val" style="color:${ptColor(c.ptsPerf,12)}">${c.ptsPerf}</div>
+      <div class="di-max">/ 12 pts</div>
+    </div>
+    <div class="detail-item">
+      <div class="di-label">Régularité (écart ${c.ecartVolees} pts)</div>
+      <div class="di-max" style="font-size:11px">${c.totauxVolees ? 'V: '+c.totauxVolees.join(' · ') : ''}</div>
+      <div class="di-val" style="color:${ptColor(c.ptsReg,3)}">${c.ptsReg}</div>
+      <div class="di-max">/ 3 pts</div>
+    </div>
+    <div class="detail-item">
+      <div class="di-label">Prévision (vs tps brut)</div>
+      <div class="di-val" style="color:${ptColor(c.ptsPrev,2)}">${c.ptsPrev}</div>
+      <div class="di-max">/ 2 pts — écart : ${c.tempsBrut != null && timeToSec(e.prevision) != null ? Math.abs(timeToSec(e.prevision) - c.tempsBrut) + 's' : '—'}</div>
+    </div>
+    <div class="detail-item">
+      <div class="di-label">Investissement</div>
+      <div class="di-val" style="color:${ptColor(c.ptsInvest,3)}">${c.ptsInvest}</div>
+      <div class="di-max">/ 3 pts</div>
+    </div>
+    <div class="detail-item" style="border:2px solid var(--blue);">
+      <div class="di-label">TOTAL</div>
+      <div class="di-val" style="color:#fff;font-size:24px">${isNaN(c.total)?'—':c.total}</div>
+      <div class="di-max">/ 20 pts</div>
+    </div>
+  </div>`;
+}
+
+function ptColor(v, max) {
+  const r = v/max;
+  if (r >= 0.8) return '#22c55e';
+  if (r >= 0.6) return '#86efac';
+  if (r >= 0.4) return '#fbbf24';
+  return '#f87171';
+}
+
+function toggleDetail(id) {
+  const panel = document.getElementById('detail-' + id);
+  if (!panel) return;
+  if (panel.classList.contains('open')) {
+    panel.classList.remove('open');
+    expandedRow = null;
+  } else {
+    document.querySelectorAll('.detail-panel.open').forEach(p => p.classList.remove('open'));
+    const e = eleves.find(x => x.id === id);
+    const c = calcNote(e);
+    panel.innerHTML = renderDetail(e, c);
+    panel.classList.add('open');
+    expandedRow = id;
+  }
+}
+
+// ─── RENDER TABLE ─────────────────────────────────────────────────────────────
+function renderTable() {
+  const container = document.getElementById('tableContainer');
+
+  if (eleves.length === 0) {
+    container.innerHTML = `<div class="empty animate-in">
+      <div class="empty-icon">🎯</div>
+      <div class="empty-title">Aucun élève</div>
+      <div style="color:var(--muted);font-size:14px">Importez un fichier CSV ou ajoutez des élèves manuellement.</div>
+      <div class="empty-hint">
+        Format CSV attendu (séparateur <code>;</code> ou <code>,</code>) :<br/>
+        <code>nom;prenom;genre;distance;temps;v1;v2;v3;v4;prevision;investissement</code><br/><br/>
+        Exemple : <code>Dupont;Marie;F;7.5;10'30";7;6;8;5;10'00";2</code><br/>
+        Genre : <code>F</code> ou <code>G</code> &nbsp;|&nbsp; Distance : <code>6</code>, <code>7.5</code> ou <code>9</code><br/>
+        Temps : <code>10'30"</code> ou <code>10:30</code> &nbsp;|&nbsp; Investissement : <code>0.5</code>, <code>1</code>, <code>2</code> ou <code>3</code>
+      </div>
+    </div>`;
+    return;
+  }
+
+  const rows = eleves.map(e => {
+    const c = calcNote(e);
+    return `
+    <tr>
+      <td>
+        <input class="cell-edit" value="${esc(e.nom)}" placeholder="Nom"
+          onchange="updateField('${e.id}','nom',this.value)"
+          style="min-width:80px;max-width:110px"/>
+      </td>
+      <td>
+        <input class="cell-edit" value="${esc(e.prenom)}" placeholder="Prénom"
+          onchange="updateField('${e.id}','prenom',this.value)"
+          style="min-width:70px;max-width:100px"/>
+      </td>
+      <td>
+        <select class="cell-edit cell-select" onchange="updateField('${e.id}','genre',this.value)" style="min-width:50px">
+          <option value="F" ${e.genre==='F'?'selected':''}>F</option>
+          <option value="G" ${e.genre==='G'?'selected':''}>G</option>
+        </select>
+      </td>
+      <td>
+        <select class="cell-edit cell-select" onchange="updateField('${e.id}','distance',this.value)" style="min-width:60px">
+          <option value="6" ${e.distance==='6'?'selected':''}>6 m</option>
+          <option value="7.5" ${e.distance==='7.5'?'selected':''}>7m50</option>
+          <option value="9" ${e.distance==='9'?'selected':''}>9 m</option>
+        </select>
+      </td>
+      <td>
+        <input class="cell-edit" value="${esc(e.prevision)}" placeholder="10'00&quot;"
+          onchange="updateField('${e.id}','prevision',this.value)"
+          style="min-width:70px;max-width:90px;font-family:var(--font-mono)"/>
+      </td>
+      ${normaliseVolees(e.volees).map((fleches, vi) => {
+        const tot = totalVolee(fleches);
+        const opts = ['','0','6','7','8','9','10'];
+        const fleInputs = fleches.map((f, fi) => {
+          const fStr = String(f);
+          return '<select class="cell-edit cell-select" onchange="updateField(\'' + e.id + '\',\'fleche\',this.value,' + vi + ',' + fi + ')" style="width:44px;font-family:var(--font-mono);padding:3px 1px">'
+            + opts.map(o => '<option value="' + o + '"' + (fStr === o ? ' selected' : '') + '>' + (o === '' ? '—' : o) + '</option>').join('')
+            + '</select>';
+        }).join('');
+        return '<td style="white-space:nowrap"><div style="display:flex;gap:2px;align-items:center">'
+          + fleInputs
+          + '<span id="vtot-' + e.id + '-' + vi + '" style="font-family:var(--font-mono);font-size:12px;color:var(--accent);min-width:22px;text-align:right;font-weight:700;margin-left:2px">' + tot + '</span>'
+          + '</div></td>';
+      }).join('')}
+      <td>
+        <input class="cell-edit" value="${esc(e.tempsCourse)}" placeholder="10'30&quot;"
+          onchange="updateField('${e.id}','tempsCourse',this.value)"
+          style="min-width:70px;max-width:90px;font-family:var(--font-mono)"/>
+      </td>
+      <td>
+        <select class="cell-edit cell-select" onchange="updateField('${e.id}','investissement',this.value)" style="min-width:100px">
+          <option value="0.5" ${e.investissement==0.5?'selected':''}>D1 — 0.5 pt</option>
+          <option value="1" ${e.investissement==1?'selected':''}>D2 — 1 pt</option>
+          <option value="2" ${e.investissement==2?'selected':''}>D3 — 2 pts</option>
+          <option value="3" ${e.investissement==3?'selected':''}>D4 — 3 pts</option>
+        </select>
+      </td>
+      <td id="note-${e.id}">${renderNoteCell(c.total)}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm btn-icon" onclick="toggleDetail('${e.id}')" title="Détail">🔍</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteEleve('${e.id}')" title="Supprimer">🗑</button>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="14" style="padding:0 8px">
+        <div class="detail-panel" id="detail-${e.id}"></div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  container.innerHTML = `<div class="table-wrapper animate-in">
+    <table>
+      <thead><tr>
+        <th>Nom</th><th>Prénom</th><th>G.</th><th>Dist.</th>
+        <th>Prévis.</th>
+        <th>Volée 1 <span style="color:var(--muted);font-weight:400">(F1·F2·F3·Σ)</span></th>
+        <th>Volée 2 <span style="color:var(--muted);font-weight:400">(F1·F2·F3·Σ)</span></th>
+        <th>Volée 3 <span style="color:var(--muted);font-weight:400">(F1·F2·F3·Σ)</span></th>
+        <th>Volée 4 <span style="color:var(--muted);font-weight:400">(F1·F2·F3·Σ)</span></th>
+        <th>Temps</th><th>Invest.</th>
+        <th>Note /20</th><th></th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+
+  // Restore expanded
+  if (expandedRow) {
+    const panel = document.getElementById('detail-' + expandedRow);
+    if (panel) {
+      const e = eleves.find(x => x.id === expandedRow);
+      const c = calcNote(e);
+      panel.innerHTML = renderDetail(e, c);
+      panel.classList.add('open');
+    }
+  }
+}
+
+// ─── RESULTATS VIEW ──────────────────────────────────────────────────────────
+function renderResultats() {
+  const view = document.getElementById('viewResultats');
+  if (eleves.length === 0) {
+    view.innerHTML = `<div class="empty"><div class="empty-icon">📊</div><div class="empty-title">Aucune donnée</div><div style="color:var(--muted)">Ajoutez des élèves dans l'onglet Élèves.</div></div>`;
+    return;
+  }
+  const data = eleves.map(e => ({ ...e, c: calcNote(e) })).sort((a,b) => b.c.total - a.c.total);
+  const avg = data.reduce((s,e) => s + (e.c.total||0), 0) / data.length;
+  const top3 = data.slice(0,3);
+
+  const podiumHTML = top3.length >= 1 ? `<div class="podium">
+    ${top3[1] ? `<div class="podium-item silver"><div class="podium-medal">🥈</div><div class="podium-name">${esc(top3[1].nom)} ${esc(top3[1].prenom)}</div><div class="podium-note" style="color:#94a3b8">${top3[1].c.total}</div></div>` : ''}
+    <div class="podium-item gold"><div class="podium-medal">🥇</div><div class="podium-name">${esc(top3[0].nom)} ${esc(top3[0].prenom)}</div><div class="podium-note" style="color:#f59e0b">${top3[0].c.total}</div></div>
+    ${top3[2] ? `<div class="podium-item bronze"><div class="podium-medal">🥉</div><div class="podium-name">${esc(top3[2].nom)} ${esc(top3[2].prenom)}</div><div class="podium-note" style="color:#cd7c3e">${top3[2].c.total}</div></div>` : ''}
+  </div>` : '';
+
+  const distrib = [0,0,0,0,0];
+  data.forEach(e => {
+    const n = e.c.total;
+    if (n < 8) distrib[0]++;
+    else if (n < 12) distrib[1]++;
+    else if (n < 14) distrib[2]++;
+    else if (n < 16) distrib[3]++;
+    else distrib[4]++;
+  });
+  const maxD = Math.max(...distrib) || 1;
+
+  view.innerHTML = `
+  <div class="animate-in">
+    ${podiumHTML}
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-val">${data.length}</div><div class="stat-label">Élèves</div></div>
+      <div class="stat-card"><div class="stat-val">${avg.toFixed(1)}</div><div class="stat-label">Moyenne</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:#22c55e">${data[0]?.c.total ?? '—'}</div><div class="stat-label">Meilleure note</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:#f87171">${data[data.length-1]?.c.total ?? '—'}</div><div class="stat-label">Note la plus basse</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="bareme-panel">
+        <h4 style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:12px">Distribution des notes</h4>
+        ${['< 8','8–12','12–14','14–16','≥ 16'].map((label,i) => {
+          const col = i===0?'#dc2626':i===1?'#ea580c':i===2?'#ca8a04':i===3?'#22c55e':'#16a34a';
+          const pct = Math.round((distrib[i]/maxD)*100);
+          return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="min-width:44px;font-size:12px;font-family:var(--font-mono);color:var(--muted)">${label}</span>
+            <div style="flex:1;height:18px;background:var(--border);border-radius:4px;overflow:hidden">
+              <div style="width:${pct}%;height:100%;background:${col};border-radius:4px;transition:width .4s"></div>
+            </div>
+            <span style="min-width:20px;font-family:var(--font-mono);font-size:12px;color:${col}">${distrib[i]}</span>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="bareme-panel">
+        <h4 style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:12px">Moyennes par critère</h4>
+        ${[
+          ['Perf (12)', data.reduce((s,e)=>s+e.c.ptsPerf,0)/data.length, 12],
+          ['Régularité (3)', data.reduce((s,e)=>s+e.c.ptsReg,0)/data.length, 3],
+          ['Prévision (2)', data.reduce((s,e)=>s+e.c.ptsPrev,0)/data.length, 2],
+          ['Investissement (3)', data.reduce((s,e)=>s+e.c.ptsInvest,0)/data.length, 3],
+        ].map(([label, moy, max]) => {
+          const pct = Math.round((moy/max)*100);
+          const col = pct>=75?'#22c55e':pct>=50?'#fbbf24':'#f87171';
+          return `<div style="margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+              <span style="color:var(--muted);font-family:var(--font-mono)">${label}</span>
+              <span style="color:${col};font-family:var(--font-mono);font-weight:700">${moy.toFixed(1)}/${max}</span>
+            </div>
+            <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden">
+              <div style="width:${pct}%;height:100%;background:${col};border-radius:4px"></div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    <div class="table-wrapper" style="margin-top:16px">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Élève</th><th>Genre</th><th>Tps final</th>
+          <th>Perf /12</th><th>Régul. /3</th><th>Prévis. /2</th><th>Invest. /3</th>
+          <th>NOTE /20</th>
+        </tr></thead>
+        <tbody>${data.map((e,i) => `<tr>
+          <td style="font-family:var(--font-mono);color:var(--muted)">${i+1}</td>
+          <td><strong>${esc(e.nom)}</strong> ${esc(e.prenom)}</td>
+          <td><span class="badge badge-genre-${e.genre.toLowerCase()}">${e.genre}</span></td>
+          <td style="font-family:var(--font-mono)">${secToStr(e.c?e.tempsFinal:null)}</td>
+          <td style="font-family:var(--font-mono)">${e.c.ptsPerf}</td>
+          <td style="font-family:var(--font-mono)">${e.c.ptsReg}</td>
+          <td style="font-family:var(--font-mono)">${e.c.ptsPrev}</td>
+          <td style="font-family:var(--font-mono)">${e.c.ptsInvest}</td>
+          <td>${renderNoteCell(e.c.total)}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ─── VIEWS ────────────────────────────────────────────────────────────────────
+function setView(v) {
+  currentView = v;
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['eleves','resultats','bareme'][i] === v);
+  });
+  document.getElementById('viewEleves').style.display = v==='eleves' ? '' : 'none';
+  document.getElementById('viewResultats').style.display = v==='resultats' ? '' : 'none';
+  document.getElementById('viewBareme').style.display = v==='bareme' ? '' : 'none';
+  if (v === 'resultats') renderResultats();
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+renderTable();
+
+// Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
