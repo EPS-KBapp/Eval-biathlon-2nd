@@ -296,10 +296,15 @@ function toast(msg, color='#16a34a') {
 function timeToSec(s) {
   if (!s && s !== 0) return null;
   if (typeof s === 'number') return s;
-  s = String(s).replace(/"/g,'').trim();
+  // Normaliser tous les types d'apostrophes/guillemets (iPad utilise U+2019 ’)
+  s = String(s)
+    .replace(/[\u2019\u2018\u02bc\u0060\u00b4]/g, "'") // apostrophes typographiques -> droite
+    .replace(/[\u201c\u201d\u22]/g, '')                  // guillemets doubles -> supprimés
+    .replace(/"/g, '')
+    .trim();
   let m;
-  if ((m = s.match(/^(\d+)[':'](\d+)$/))) return +m[1]*60 + +m[2];
-  if ((m = s.match(/^(\d+)'(\d+)"?$/))) return +m[1]*60 + +m[2];
+  if ((m = s.match(/^(\d+)[':](\d+)$/))) return +m[1]*60 + +m[2];
+  if ((m = s.match(/^(\d+)'(\d+)'?$/))) return +m[1]*60 + +m[2];
   const n = parseFloat(s);
   return isNaN(n) ? null : n;
 }
