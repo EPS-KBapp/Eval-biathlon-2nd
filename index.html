@@ -530,7 +530,7 @@ document.getElementById('csvInput').addEventListener('change', function(ev) {
         };
       };
       const imported = lines.slice(1).filter(l => l.trim()).map(line => {
-        const vals = line.split(sep);
+        const vals = parseLine(line); // parseLine retire les guillemets
         const g = get(vals,'genre','sexe').toUpperCase();
         return {
           id: uid(),
