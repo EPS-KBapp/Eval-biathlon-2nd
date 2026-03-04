@@ -403,9 +403,10 @@ function calcNote(eleve) {
 
   const objectifs = {'6':120,'7.5':100,'9':80}; // 4 volées × (30/25/20 pts)
   const obj = objectifs[String(eleve.distance)] ?? 100;
-  const pen = (totalTir - obj) * 5; // positif = bonus (soustrait du temps)
+  // penalite > 0 = temps ajouté (points manquants), penalite < 0 = temps retiré (bonus)
+  const penalite = (obj - totalTir) * 5;
   const tc = timeToSec(eleve.tempsCourse);
-  const tempsFinal = tc != null ? tc - pen : null;
+  const tempsFinal = tc != null ? tc + penalite : null;
 
   eleve.tempsFinal = tempsFinal;
 
@@ -433,7 +434,7 @@ function calcNote(eleve) {
 
   const ptsInvest = parseFloat(eleve.investissement) || 0;
   const total = ptsPerf + ptsReg + ptsPrev + ptsInvest;
-  return { ptsPerf, ptsReg, ptsPrev, ptsInvest, total, pen, totalTir, totauxVolees, ecartVolees: ecart, tempsBrut: tc };
+  return { ptsPerf, ptsReg, ptsPrev, ptsInvest, total, pen: penalite, totalTir, totauxVolees, ecartVolees: ecart, tempsBrut: tc };
 }
 
 // ─── ADD / DELETE ─────────────────────────────────────────────────────────────
@@ -464,14 +465,21 @@ document.getElementById('csvInput').addEventListener('change', function(ev) {
   const reader = new FileReader();
   reader.onload = e => {
     try {
-      const text = e.target.result;
+      // Supprimer le BOM UTF-8 éventuel (Safari/iPad)
+      const text = e.target.result.replace(/^\uFEFF/, '');
       const lines = text.trim().split(/\r?\n/);
       const sep = lines[0].includes(';') ? ';' : ',';
-      const headers = lines[0].split(sep).map(h => h.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''));
+      // Normaliser : minuscules + supprimer accents + supprimer guillemets
+      const norm = s => s.trim().toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+        .replace(/^["']|["']$/g,'');
+      const headers = lines[0].split(sep).map(norm);
       const get = (row, ...keys) => {
         for (const k of keys) {
-          const i = headers.indexOf(k);
-          if (i >= 0 && row[i]) return row[i].trim();
+          // Normaliser aussi la clé cherchée
+          const nk = norm(k);
+          const i = headers.indexOf(nk);
+          if (i >= 0 && row[i]) return norm(row[i]);
         }
         return '';
       };
