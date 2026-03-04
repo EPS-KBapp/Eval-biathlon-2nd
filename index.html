@@ -474,27 +474,78 @@ document.getElementById('csvInput').addEventListener('change', function(ev) {
       const text = e.target.result.replace(/^\uFEFF/, '');
       const lines = text.trim().split(/\r?\n/);
       const sep = lines[0].includes(';') ? ';' : ',';
-      // Normaliser : minuscules + supprimer accents + supprimer guillemets
+
+      // Normaliser une chaîne : minuscules, sans accents, sans guillemets
       const norm = s => s.trim().toLowerCase()
         .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-        .replace(/^["']|["']$/g,'');
-      const headers = lines[0].split(sep).map(norm);
+        .replace(/^["\u201c\u201d]|["\u201c\u201d]$/g,'')
+        .replace(/^['\u2019]|['\u2019]$/g,'');
+
+      // Parser une ligne CSV en tenant compte des guillemets
+      const parseLine = line => {
+        const res = []; let cur = ''; let inQ = false;
+        for (let i = 0; i < line.length; i++) {
+          const c = line[i];
+          if (c === '"' || c === '\u201c' || c === '\u201d') { inQ = !inQ; }
+          else if (c === sep && !inQ) { res.push(cur.trim()); cur = ''; }
+          else { cur += c; }
+        }
+        res.push(cur.trim());
+        return res;
+      };
+
+      const headers = parseLine(lines[0]).map(norm);
+
       const get = (row, ...keys) => {
         for (const k of keys) {
-          // Normaliser aussi la clé cherchée
           const nk = norm(k);
           const i = headers.indexOf(nk);
-          if (i >= 0 && row[i]) return norm(row[i]);
+          if (i >= 0 && row[i] != null && String(row[i]).trim()) return String(row[i]).trim();
         }
         return '';
+      };
+
+      // Détecter si le CSV a une colonne unique "NOM Prénom" (ex: export pronote/sconet)
+      // Heuristique : pas de colonne "nom" ou "prenom" mais une colonne "eleve" ou "nom prenom"
+      const hasNomPrenom = headers.some(h => ['eleve','nom prenom','nomprenom','etudiant'].includes(h));
+      const hasNom = headers.some(h => h === 'nom');
+      const hasSingleNameCol = (hasNomPrenom || !hasNom) && headers.length >= 1;
+
+      // Séparer "NOM Prénom" : les mots tout en majuscules = nom, le reste = prénom
+      const splitNomPrenom = str => {
+        str = str.trim();
+        const words = str.split(/\s+/);
+        const nomParts = [], prenomParts = [];
+        for (const w of words) {
+          if (w === w.toUpperCase() && w.length > 1) nomParts.push(w);
+          else prenomParts.push(w);
+        }
+        // Si tout est en majuscules (ex: "DUPONT MARIE"), on prend le 1er mot comme nom
+        if (prenomParts.length === 0 && nomParts.length > 1) {
+          return { nom: nomParts[0], prenom: nomParts.slice(1).join(' ') };
+        }
+        return {
+          nom: nomParts.length ? nomParts.join(' ') : words[0] || '',
+          prenom: prenomParts.length ? prenomParts.join(' ') : words.slice(1).join(' ')
+        };
       };
       const imported = lines.slice(1).filter(l => l.trim()).map(line => {
         const vals = line.split(sep);
         const g = get(vals,'genre','sexe').toUpperCase();
         return {
           id: uid(),
-          nom: get(vals,'nom','name','eleve'),
-          prenom: get(vals,'prenom','firstname','prénom'),
+          ...(() => {
+            // Essayer d'abord les colonnes séparées nom / prenom
+            const nomVal = get(vals,'nom','name','lastname','surname');
+            const prenomVal = get(vals,'prenom','firstname','prenom','first name');
+            if (nomVal || prenomVal) return { nom: nomVal, prenom: prenomVal };
+            // Sinon chercher colonne unique "Élève", "Nom Prénom", etc.
+            const full = get(vals,'eleve','nom prenom','nomprenom','etudiant','name','élève','eleve');
+            if (full) return splitNomPrenom(full);
+            // En dernier recours : première colonne
+            const first = parseLine(lines[1] || '')[0] ? String(vals[0]).trim() : '';
+            return first ? splitNomPrenom(first) : { nom: '', prenom: '' };
+          })(),
           genre: g === 'G' ? 'G' : 'F',
           distance: get(vals,'distance') || '7.5',
           tempsCourse: get(vals,'temps','tempscourse','temps course','time'),
